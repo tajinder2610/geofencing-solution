@@ -3,7 +3,7 @@
 **GitHub repository:** https://github.com/tajinder2610/geofencing-solution
 **Docker Hub image:** https://hub.docker.com/r/tajinder26/geofence-backend
 **Demo video:** _add your link here (Loom / YouTube unlisted / Google Drive shared with the reviewers)_
-**Live frontend:** _add URL_ · **Live backend:** _add URL_
+**Live frontend:** https://geofencing-solution.vercel.app · **Live backend:** https://geofence-backend-893r.onrender.com
 
 - **[SETUP.md](SETUP.md)** – prerequisites, Docker Compose, API testing with curl, frontend guide, architecture
 - **[DEPLOY.md](DEPLOY.md)** – deployment walkthrough (Neon + Render + Vercel)

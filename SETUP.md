@@ -5,7 +5,7 @@ Go REST API + WebSocket alerts, PostgreSQL/PostGIS storage, React (Vite + TypeSc
 - **GitHub repository:** https://github.com/tajinder2610/geofencing-solution
 - **Docker Hub image:** https://hub.docker.com/r/tajinder26/geofence-backend
 - **Demo video:** _add your link here (Loom / YouTube unlisted / Drive shared with the reviewers)_
-- **Live frontend:** _add URL_ · **Live backend:** _add URL_
+- **Live frontend:** https://geofencing-solution.vercel.app · **Live backend:** https://geofence-backend-893r.onrender.com
 
 ```
 .
