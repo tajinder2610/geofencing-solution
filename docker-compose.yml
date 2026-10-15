@@ -1,0 +1,44 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4-alpine
+    environment:
+      POSTGRES_USER: geo
+      POSTGRES_PASSWORD: geo
+      POSTGRES_DB: geofence
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U geo -d geofence"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    environment:
+      PORT: "8080"
+      DATABASE_URL: postgres://geo:geo@db:5432/geofence?sslmode=disable
+      ALLOWED_ORIGINS: "*"
+      # API_KEY: change-me          # uncomment to require X-API-Key on every request
+      # RATE_LIMIT_RPS: "50"        # POST /vehicles/location, per client IP
+      # RATE_LIMIT_BURST: "100"
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8080
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
