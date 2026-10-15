@@ -1,7 +1,9 @@
 # Geofencing & Real-time Alert System
 
-**Demo video:** _paste your link here (Loom / YouTube unlisted / Google Drive shared with the reviewers)_
-**Live frontend:** _URL_ · **Live backend:** _URL_ · **Docker Hub image:** _docker.io/<user>/geofence-backend_
+**GitHub repository:** https://github.com/tajinder2610/geofencing-solution
+**Docker Hub image:** https://hub.docker.com/r/tajinder26/geofence-backend
+**Demo video:** _add your link here (Loom / YouTube unlisted / Google Drive shared with the reviewers)_
+**Live frontend:** _add URL_ · **Live backend:** _add URL_
 
 - **[SETUP.md](SETUP.md)** – prerequisites, Docker Compose, API testing with curl, frontend guide, architecture
 - **[DEPLOY.md](DEPLOY.md)** – deployment walkthrough (Neon + Render + Vercel)

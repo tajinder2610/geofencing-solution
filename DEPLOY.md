@@ -22,7 +22,7 @@ cd backend
 docker login
 docker buildx build --platform linux/amd64 -t <dockerhub-user>/geofence-backend:latest --push .
 ```
-Check it at `https://hub.docker.com/r/<dockerhub-user>/geofence-backend`. Add the link to `SETUP.md`. If the repo is private on Docker Hub, the host needs registry credentials; making the *image* public is simplest (the *source repo* must stay private per the brief).
+Check it at `https://hub.docker.com/r/<dockerhub-user>/geofence-backend`. Add the link to `SETUP.md`. If the image is private on Docker Hub, the host needs registry credentials; making the *image* public is simplest. Source repository visibility is a separate choice.
 
 ## 3. Backend – Render (Docker image)
 1. New → **Web Service** → *Existing image from a registry* → `docker.io/<dockerhub-user>/geofence-backend:latest`.
