@@ -18,6 +18,8 @@ interface Props {
 export function VehiclePanel({ picked, onPickChange, selectedVehicleId, onSelectVehicle, onFocus }: Props) {
   const { vehicles, loading, refreshVehicles } = useAppData()
   const { push } = useToasts()
+  const [actionBusy, setActionBusy] = useState<string | null>(null)
+  const [actionError, setActionError] = useState<unknown>(null)
 
   // ---- register
   const [number, setNumber] = useState('')
@@ -104,6 +106,43 @@ export function VehiclePanel({ picked, onPickChange, selectedVehicleId, onSelect
     onSelectVehicle(v.id)
     setResult(null)
     if (v.current_location) onFocus({ center: [v.current_location.latitude, v.current_location.longitude], nonce: Date.now() })
+  }
+
+  const clearTrail = async (v: Vehicle) => {
+    if (!window.confirm(`Clear the trail and current location for ${v.vehicle_number}? Violation history will be kept.`)) return
+    setActionBusy(v.id)
+    setActionError(null)
+    try {
+      await api.clearVehicleTrail(v.id)
+      push({ kind: 'success', title: 'Trail cleared', body: `${v.vehicle_number} location and trail removed; violation history kept.` })
+      await refreshVehicles()
+    } catch (err) {
+      setActionError(err)
+    } finally {
+      setActionBusy(null)
+    }
+  }
+
+  const removeVehicle = async (v: Vehicle) => {
+    if (!window.confirm(`Delete ${v.vehicle_number}? Its trail, violation history, and vehicle-specific alert rules will also be deleted.`)) return
+    setActionBusy(v.id)
+    setActionError(null)
+    try {
+      await api.deleteVehicle(v.id)
+      if (selectedVehicleId === v.id) {
+        onSelectVehicle(null)
+        onPickChange(null)
+        setLat('')
+        setLng('')
+        setResult(null)
+      }
+      push({ kind: 'success', title: 'Vehicle deleted', body: v.vehicle_number })
+      await refreshVehicles()
+    } catch (err) {
+      setActionError(err)
+    } finally {
+      setActionBusy(null)
+    }
   }
 
   return (
@@ -196,6 +235,7 @@ export function VehiclePanel({ picked, onPickChange, selectedVehicleId, onSelect
 
       <section className="card">
         <h2>Fleet ({vehicles.length})</h2>
+        <ErrorBanner error={actionError} />
         {loading && vehicles.length === 0 ? (
           <Spinner label="Loading vehicles…" />
         ) : vehicles.length === 0 ? (
@@ -205,8 +245,8 @@ export function VehiclePanel({ picked, onPickChange, selectedVehicleId, onSelect
             {vehicles.map((v) => {
               const inside = v.current_geofences ?? []
               return (
-                <li key={v.id}>
-                  <button className={`list-item ${v.id === selectedVehicleId ? 'active' : ''}`} onClick={() => focusVehicle(v)}>
+                <li key={v.id} className={`list-item ${v.id === selectedVehicleId ? 'active' : ''}`}>
+                  <button className="list-hit" onClick={() => focusVehicle(v)}>
                     <span className="emoji">{vehicleEmoji(v.vehicle_type)}</span>
                     <span className="list-main">
                       <strong>{v.vehicle_number}</strong>
@@ -229,6 +269,14 @@ export function VehiclePanel({ picked, onPickChange, selectedVehicleId, onSelect
                       <Badge color="#9ca3af">No fix</Badge>
                     )}
                   </button>
+                  <span className="rule-actions">
+                    <button className="btn btn-small" disabled={actionBusy !== null} onClick={() => void clearTrail(v)}>
+                      Clear trail
+                    </button>
+                    <button className="btn btn-small btn-danger" disabled={actionBusy !== null} onClick={() => void removeVehicle(v)}>
+                      Delete
+                    </button>
+                  </span>
                 </li>
               )
             })}

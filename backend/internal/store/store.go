@@ -253,6 +253,38 @@ func (s *Store) GetVehicle(ctx context.Context, id string) (*Vehicle, error) {
 	return scanVehicle(s.db.QueryRowContext(ctx, vehicleCols+` WHERE id = $1`, id))
 }
 
+// DeleteVehicle removes a vehicle and its dependent records through the schema's cascades.
+func (s *Store) DeleteVehicle(ctx context.Context, id string) error {
+	res, err := s.db.ExecContext(ctx, `DELETE FROM vehicles WHERE id = $1`, id)
+	if err != nil {
+		return err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+// ClearVehicleTrail removes recorded positions and current geofence state, preserving event history.
+func (s *Store) ClearVehicleTrail(ctx context.Context, id string) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if _, err := scanVehicle(tx.QueryRowContext(ctx, vehicleCols+` WHERE id = $1 FOR UPDATE`, id)); err != nil {
+		return err
+	}
+	if _, err := tx.ExecContext(ctx, `DELETE FROM vehicle_geofence_state WHERE vehicle_id = $1`, id); err != nil {
+		return err
+	}
+	if _, err := tx.ExecContext(ctx, `DELETE FROM vehicle_locations WHERE vehicle_id = $1`, id); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
 const vehicleCols = `SELECT id, vehicle_number, driver_name, vehicle_type, phone, status, created_at FROM vehicles`
 
 func scanVehicle(row *sql.Row) (*Vehicle, error) {

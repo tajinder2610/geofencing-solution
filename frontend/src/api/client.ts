@@ -85,6 +85,12 @@ export const api = {
   createVehicle(body: { vehicle_number: string; driver_name: string; vehicle_type: string; phone: string }) {
     return request<{ id: string; vehicle_number: string; status: string }>('/vehicles', { method: 'POST', body: JSON.stringify(body) })
   },
+  clearVehicleTrail(id: string) {
+    return request<{ cleared: boolean }>(`/vehicles/${encodeURIComponent(id)}/trail`, { method: 'DELETE' })
+  },
+  deleteVehicle(id: string) {
+    return request<{ deleted: boolean }>(`/vehicles/${encodeURIComponent(id)}`, { method: 'DELETE' })
+  },
   updateLocation(body: { vehicle_id: string; latitude: number; longitude: number; timestamp: string }) {
     return request<LocationUpdateResult>('/vehicles/location', { method: 'POST', body: JSON.stringify(body) })
   },

@@ -71,6 +71,22 @@ func (s *Server) listVehicles(r *http.Request) (int, any, error) {
 	return http.StatusOK, map[string]any{"vehicles": items, "total_count": total, "limit": limit, "offset": offset}, nil
 }
 
+func (s *Server) deleteVehicle(r *http.Request) (int, any, error) {
+	id := r.PathValue("vehicle_id")
+	if err := s.store.DeleteVehicle(r.Context(), id); err != nil {
+		return 0, nil, err
+	}
+	return http.StatusOK, map[string]any{"deleted": true}, nil
+}
+
+func (s *Server) clearVehicleTrail(r *http.Request) (int, any, error) {
+	id := r.PathValue("vehicle_id")
+	if err := s.store.ClearVehicleTrail(r.Context(), id); err != nil {
+		return 0, nil, err
+	}
+	return http.StatusOK, map[string]any{"cleared": true}, nil
+}
+
 type updateLocationRequest struct {
 	VehicleID string   `json:"vehicle_id"`
 	Latitude  *float64 `json:"latitude"`

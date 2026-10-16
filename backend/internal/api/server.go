@@ -52,6 +52,8 @@ func (s *Server) Handler() http.Handler {
 
 	mux.HandleFunc("POST /vehicles", s.wrap(s.createVehicle))
 	mux.HandleFunc("GET /vehicles", s.wrap(s.listVehicles))
+	mux.HandleFunc("DELETE /vehicles/{vehicle_id}", s.wrap(s.deleteVehicle))
+	mux.HandleFunc("DELETE /vehicles/{vehicle_id}/trail", s.wrap(s.clearVehicleTrail))
 	mux.HandleFunc("POST /vehicles/location", s.rateLimit(s.wrap(s.updateLocation)))
 	mux.HandleFunc("GET /vehicles/location/{vehicle_id}", s.wrap(s.getVehicleLocation))
 	mux.HandleFunc("GET /vehicles/trail/{vehicle_id}", s.wrap(s.vehicleTrail))

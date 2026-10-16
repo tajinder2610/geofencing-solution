@@ -137,6 +137,8 @@ Extra endpoints (not required by the spec, used by the UI):
 | `PUT /geofences/{geofence_id}` | Replace a geofence (same body as create). Vehicle membership is recomputed silently, so editing never fires alerts |
 | `DELETE /geofences/{geofence_id}` | Delete a geofence; its alert rules, state and history cascade |
 | `GET /vehicles/trail/{vehicle_id}?limit=100` | Recent positions (oldest → newest) for drawing a path |
+| `DELETE /vehicles/{vehicle_id}/trail` | Clear recorded positions and current geofence state; preserve violation history |
+| `DELETE /vehicles/{vehicle_id}` | Delete a vehicle; its locations, event history and vehicle-specific alert rules cascade |
 | `PATCH /alerts/{alert_id}` | `{"status":"active"\|"inactive"}` pause/resume a rule |
 | `DELETE /alerts/{alert_id}` | Delete a rule |
 
@@ -161,7 +163,7 @@ cd ../frontend && npm test                     # 12 tests: coordinate parsing + 
 
 ## 5. Frontend usage guide
 
-Edit and delete buttons on each geofence reuse the create form. Selecting a vehicle on the map draws its recent trail.
+Edit and delete buttons on each geofence reuse the create form. Select a vehicle on the map to draw its recent trail; use **Clear trail** to remove its recorded positions/current location while preserving violation history, or **Delete** to remove the vehicle and its related data.
 
 The header shows a **Live / Reconnecting** indicator for the WebSocket and a badge on *Live alerts* when new alerts arrive while you are on another tab.
 

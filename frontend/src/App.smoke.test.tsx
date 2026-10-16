@@ -62,6 +62,8 @@ function mockFetch() {
     if (path.startsWith('/geofences') && method === 'GET') return ok({ geofences: [geofence], total_count: 1 })
     if (path.startsWith('/vehicles/trail')) return ok({ vehicle_id: 'veh_1', points: [] })
     if (path.startsWith('/vehicles') && method === 'GET') return ok({ vehicles: [vehicle], total_count: 1 })
+    if (method === 'DELETE' && path === '/vehicles/veh_1/trail') return ok({ cleared: true })
+    if (method === 'DELETE' && path === '/vehicles/veh_1') return ok({ deleted: true })
     if (path.startsWith('/alerts') && method === 'GET') return ok({ alerts: [], total_count: 0 })
     if (path === '/alerts/configure') return ok({ alert_id: 'alert_1' }, 201)
     if (path.startsWith('/violations/history')) return ok({ violations: [], total_count: 0 })
@@ -152,6 +154,22 @@ describe('App smoke test', () => {
     const sent = calls.find((c) => c.path === '/vehicles/location')?.body as Record<string, unknown>
     expect(sent).toMatchObject({ vehicle_id: 'veh_1', latitude: 37.7799, longitude: -122.4144 })
     expect(String(sent.timestamp)).toMatch(/Z$/)
+  })
+
+  it('clears a vehicle trail or deletes the vehicle after confirmation', async () => {
+    vi.stubGlobal('confirm', vi.fn(() => true))
+    renderApp()
+    await waitFor(() => expect(screen.getByText('Live')).toBeTruthy())
+    await userEvent.click(screen.getByRole('tab', { name: /Vehicles/ }))
+    await waitFor(() => expect(screen.getByText('KA-01-AB-1234')).toBeTruthy())
+
+    await userEvent.click(screen.getByRole('button', { name: 'Clear trail' }))
+    await waitFor(() => expect(calls.some((c) => c.method === 'DELETE' && c.path === '/vehicles/veh_1/trail')).toBe(true))
+    expect(screen.getByText('Trail cleared')).toBeTruthy()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Delete' }))
+    await waitFor(() => expect(calls.some((c) => c.method === 'DELETE' && c.path === '/vehicles/veh_1')).toBe(true))
+    expect(screen.getByText('Vehicle deleted')).toBeTruthy()
   })
 
   it('requires 3 points before a geofence can be created, and accepts typed coordinates', async () => {

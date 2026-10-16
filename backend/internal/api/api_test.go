@@ -323,6 +323,58 @@ func TestGeofenceEditDeleteAndTrail(t *testing.T) {
 	}
 }
 
+func TestVehicleTrailClearAndDelete(t *testing.T) {
+	ts := newTestServer(t)
+	_, geo := call(t, ts, "POST", "/geofences", map[string]any{
+		"name": "Vehicle lifecycle", "category": "restricted_zone", "coordinates": square(10, 10, 1),
+	})
+	_, vehicle := call(t, ts, "POST", "/vehicles", map[string]any{
+		"vehicle_number": "REMOVE-1", "driver_name": "D", "vehicle_type": "car", "phone": "+1234567890",
+	})
+	vehicleID := vehicle["id"].(string)
+	call(t, ts, "POST", "/alerts/configure", map[string]any{
+		"geofence_id": geo["id"], "vehicle_id": vehicleID, "event_type": "entry",
+	})
+	call(t, ts, "POST", "/vehicles/location", map[string]any{
+		"vehicle_id": vehicleID, "latitude": 10.5, "longitude": 10.5, "timestamp": time.Now().UTC().Format(time.RFC3339),
+	})
+
+	if status, out := call(t, ts, "DELETE", "/vehicles/"+vehicleID+"/trail", nil); status != 200 || out["cleared"] != true {
+		t.Fatalf("clear trail: %d %v", status, out)
+	}
+	if status, out := call(t, ts, "GET", "/vehicles/trail/"+vehicleID, nil); status != 200 || len(out["points"].([]any)) != 0 {
+		t.Fatalf("trail after clear: %d %v", status, out)
+	}
+	if status, out := call(t, ts, "GET", "/vehicles/location/"+vehicleID, nil); status != 200 || out["current_location"] != nil {
+		t.Fatalf("current location after clear: %d %v", status, out)
+	}
+	if _, out := call(t, ts, "GET", "/violations/history?vehicle_id="+vehicleID, nil); out["total_count"].(float64) != 1 {
+		t.Fatalf("clear should preserve violation history: %v", out)
+	}
+	if _, out := call(t, ts, "GET", "/alerts?vehicle_id="+vehicleID, nil); len(out["alerts"].([]any)) != 1 {
+		t.Fatalf("clear should preserve vehicle alert rules: %v", out)
+	}
+
+	if status, out := call(t, ts, "DELETE", "/vehicles/"+vehicleID, nil); status != 200 || out["deleted"] != true {
+		t.Fatalf("delete vehicle: %d %v", status, out)
+	}
+	if status, _ := call(t, ts, "GET", "/vehicles/location/"+vehicleID, nil); status != 404 {
+		t.Errorf("deleted vehicle should return 404, got %d", status)
+	}
+	if _, out := call(t, ts, "GET", "/violations/history?vehicle_id="+vehicleID, nil); out["total_count"].(float64) != 0 {
+		t.Errorf("delete should remove violation history: %v", out)
+	}
+	if _, out := call(t, ts, "GET", "/alerts?vehicle_id="+vehicleID, nil); len(out["alerts"].([]any)) != 0 {
+		t.Errorf("delete should remove vehicle-specific alert rules: %v", out)
+	}
+	if status, _ := call(t, ts, "DELETE", "/vehicles/"+vehicleID, nil); status != 404 {
+		t.Errorf("second delete should return 404, got %d", status)
+	}
+	if status, _ := call(t, ts, "DELETE", "/vehicles/veh_nope/trail", nil); status != 404 {
+		t.Errorf("clear unknown vehicle should return 404, got %d", status)
+	}
+}
+
 func mustHave(t *testing.T, where string, m map[string]any, keys ...string) {
 	t.Helper()
 	for _, k := range keys {
