@@ -172,6 +172,29 @@ describe('App smoke test', () => {
     expect(screen.getByText('Vehicle deleted')).toBeTruthy()
   })
 
+  it('resets history filters and reloads all events from the first page', async () => {
+    renderApp()
+    await waitFor(() => expect(screen.getByText('Live')).toBeTruthy())
+    await userEvent.click(screen.getByRole('tab', { name: /History/ }))
+
+    const [vehicleFilter, geofenceFilter] = screen.getAllByRole('combobox')
+    await userEvent.selectOptions(vehicleFilter, 'veh_1')
+    await userEvent.selectOptions(geofenceFilter, 'geo_1')
+    await userEvent.click(screen.getByRole('button', { name: 'Apply' }))
+
+    await waitFor(() =>
+      expect(calls.some((c) => c.path.includes('/violations/history?vehicle_id=veh_1&geofence_id=geo_1'))).toBe(true),
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Reset' }))
+
+    await waitFor(() =>
+      expect(calls.some((c) => c.path === '/violations/history?limit=25&offset=0')).toBe(true),
+    )
+    expect((vehicleFilter as HTMLSelectElement).value).toBe('')
+    expect((geofenceFilter as HTMLSelectElement).value).toBe('')
+  })
+
   it('requires 3 points before a geofence can be created, and accepts typed coordinates', async () => {
     renderApp()
     await waitFor(() => expect(screen.getByText('Downtown Restricted')).toBeTruthy())

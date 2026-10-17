@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { api } from '../api/client'
 import type { Violation } from '../api/types'
 import { useAppData } from '../hooks/useAppData'
@@ -22,16 +22,18 @@ export function HistoryPanel({ refreshKey }: { refreshKey: number }) {
   const [applied, setApplied] = useState<Filters>(NO_FILTERS)
   const [pageSize, setPageSize] = useState(25)
   const [page, setPage] = useState(0)
+  const [reloadKey, setReloadKey] = useState(0)
 
   const [rows, setRows] = useState<Violation[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<unknown>(null)
 
-  const load = useCallback(async () => {
+  useEffect(() => {
+    let cancelled = false
     setLoading(true)
-    try {
-      const r = await api.history({
+    api
+      .history({
         vehicle_id: applied.vehicle_id || undefined,
         geofence_id: applied.geofence_id || undefined,
         start_date: applied.start ? localInputToISO(applied.start) : undefined,
@@ -39,19 +41,23 @@ export function HistoryPanel({ refreshKey }: { refreshKey: number }) {
         limit: pageSize,
         offset: page * pageSize,
       })
-      setRows(r.items)
-      setTotal(r.total)
-      setError(null)
-    } catch (e) {
-      setError(e)
-    } finally {
-      setLoading(false)
-    }
-  }, [applied, page, pageSize])
+      .then((r) => {
+        if (cancelled) return
+        setRows(r.items)
+        setTotal(r.total)
+        setError(null)
+      })
+      .catch((e) => {
+        if (!cancelled) setError(e)
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
 
-  useEffect(() => {
-    void load()
-  }, [load, refreshKey])
+    return () => {
+      cancelled = true
+    }
+  }, [applied, page, pageSize, refreshKey, reloadKey])
 
   const apply = (e: FormEvent) => {
     e.preventDefault()
@@ -166,7 +172,7 @@ export function HistoryPanel({ refreshKey }: { refreshKey: number }) {
           <button className="btn btn-small" disabled={page + 1 >= pages} onClick={() => setPage(page + 1)}>
             Next →
           </button>
-          <button className="btn btn-small" onClick={() => void load()} disabled={loading}>
+          <button className="btn btn-small" onClick={() => setReloadKey((key) => key + 1)} disabled={loading}>
             ⟳
           </button>
         </span>
