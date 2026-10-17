@@ -144,16 +144,21 @@ describe('App smoke test', () => {
     await userEvent.click(screen.getByRole('tab', { name: /Vehicles/ }))
     await waitFor(() => expect(screen.getByText('KA-01-AB-1234')).toBeTruthy())
 
+    const timestampField = document.querySelector('input[type="datetime-local"]') as HTMLInputElement
+    const initialTimestamp = timestampField.value
     const select = screen.getAllByRole('combobox')[0]
     await userEvent.selectOptions(select, 'veh_1')
     await userEvent.type(screen.getByPlaceholderText('37.7799'), '37.7799')
     await userEvent.type(screen.getByPlaceholderText('-122.4144'), '-122.4144')
+    await new Promise((resolve) => setTimeout(resolve, 1100))
     await userEvent.click(screen.getByRole('button', { name: 'Send location update' }))
 
     await waitFor(() => expect(screen.getByText(/Inside/, { selector: 'li' })).toBeTruthy())
     const sent = calls.find((c) => c.path === '/vehicles/location')?.body as Record<string, unknown>
     expect(sent).toMatchObject({ vehicle_id: 'veh_1', latitude: 37.7799, longitude: -122.4144 })
     expect(String(sent.timestamp)).toMatch(/Z$/)
+    expect(Date.parse(String(sent.timestamp))).toBeGreaterThan(Date.parse(initialTimestamp))
+    expect(timestampField.value).not.toBe(initialTimestamp)
   })
 
   it('clears a vehicle trail or deletes the vehicle after confirmation', async () => {

@@ -168,7 +168,7 @@ Edit and delete buttons on each geofence reuse the create form. Select a vehicle
 The header shows a **Live / Reconnecting** indicator for the WebSocket and a badge on *Live alerts* when new alerts arrive while you are on another tab.
 
 1. **Geofences** – press **Draw on map** and click to place vertices (Undo / Clear to adjust), or type/paste `lat, lng` lines – both stay in sync. Choose a category, **Create geofence**. The list can be filtered by category (server-side query); click an item to zoom to it.
-2. **Vehicles** – register a vehicle, select it, then **click the map** (or type coordinates) and choose a timestamp, then **Send location update**. The result card shows which geofences it is now inside; markers turn red inside restricted zones.
+2. **Vehicles** – register a vehicle, select it, then **click the map** (or type coordinates) and **Send location update**. The timestamp is set automatically to the current date and time when submitted. The result card shows which geofences it is now inside; markers turn red inside restricted zones.
 3. **Alert rules** – pick a geofence, optionally a vehicle (default: all), and entry / exit / both. Rules can be paused, resumed or deleted.
 4. **Live alerts** – incoming events appear as toasts, pulse the vehicle marker, and accumulate in the feed with vehicle, geofence + category, event type, timestamp and coordinates.
 5. **History** – filter by vehicle, geofence and date range; paginate with a page-size selector. It refreshes itself when a live alert arrives.

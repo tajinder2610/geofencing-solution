@@ -3,7 +3,7 @@ import { api, type LocationUpdateResult } from '../api/client'
 import type { LatLng, Vehicle } from '../api/types'
 import { useAppData } from '../hooks/useAppData'
 import { useToasts } from '../hooks/useToasts'
-import { formatCoord, formatDateTime, localInputToISO, toLocalInputValue, VEHICLE_TYPES, vehicleEmoji } from '../lib/format'
+import { formatCoord, formatDateTime, toLocalInputValue, VEHICLE_TYPES, vehicleEmoji } from '../lib/format'
 import type { MapFocus } from './MapView'
 import { Badge, Empty, ErrorBanner, Field, Spinner } from './ui'
 
@@ -81,11 +81,13 @@ export function VehiclePanel({ picked, onPickChange, selectedVehicleId, onSelect
     if (!selectedVehicleId) return setUpdateError(new Error('Select a vehicle first.'))
     setUpdating(true)
     try {
+      const submittedAt = new Date()
+      setWhen(toLocalInputValue(submittedAt))
       const res = await api.updateLocation({
         vehicle_id: selectedVehicleId,
         latitude: Number(lat),
         longitude: Number(lng),
-        timestamp: localInputToISO(when),
+        timestamp: submittedAt.toISOString(),
       })
       setResult(res)
       await refreshVehicles()
@@ -170,12 +172,9 @@ export function VehiclePanel({ picked, onPickChange, selectedVehicleId, onSelect
               <input inputMode="decimal" value={lng} onChange={(e) => onCoordInput(lat, e.target.value)} placeholder="-122.4144" />
             </Field>
           </div>
-          <Field label="Timestamp">
+          <Field label="Timestamp" hint="Automatically set to the current date and time when you send the update.">
             <div className="row">
-              <input type="datetime-local" step={1} value={when} onChange={(e) => setWhen(e.target.value)} />
-              <button type="button" className="btn" onClick={() => setWhen(toLocalInputValue(new Date()))}>
-                Now
-              </button>
+              <input type="datetime-local" step={1} value={when} readOnly />
             </div>
           </Field>
           <button className="btn btn-primary" disabled={updating || !selectedVehicleId || !coordsValid || !when}>
